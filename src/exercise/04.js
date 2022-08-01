@@ -85,13 +85,12 @@ function Game() {
       return;
     }
 
-    const squaresCopy = [...currentSquares];
-    squaresCopy[square] = nextValue;
+    const squares = [...currentSquares];
+    squares[square] = nextValue;
     setHistory(prev => {
-      const newHistory = [...prev];
-      // truncate all from next step and replace all by a single squaresCopy
-      newHistory.splice(currentStep + 1, Infinity, squaresCopy);
-      return newHistory;
+      // truncate history until currentStep
+      const newHistory = prev.slice(0, currentStep + 1);
+      return [...newHistory, squares];
     });
     setCurrentStep(prev => prev + 1);
   }
@@ -101,17 +100,11 @@ function Game() {
     setHistory(getInitialState());
   }
 
-  function renderMoves() {
-    let jsx = [];
-    for (let i = 0; i < history.length; i++){
-      const isOnCurrentStep = i === currentStep;
-      let label = (i === 0 ? 'Go to game start' : `Go to move #${i}`) + (isOnCurrentStep ? " (current)": "");
-      jsx.push(<ol key={i}>
-        <button onClick={() => setCurrentStep(i)} disabled={isOnCurrentStep}>{label}</button>
-      </ol> )
-    }
-    return jsx;
-  }
+  const moves = history.map((h, step) => {
+      const isCurrentStep = step === currentStep;
+      const label = (step === 0 ? 'Go to game start' : `Go to move #${step}`) + (isCurrentStep ? " (current)": "");
+      return <li key={step}><button onClick={() => setCurrentStep(step)} disabled={isCurrentStep}>{label}</button></li>
+    });
 
   return (
     <div className="game">
@@ -123,7 +116,7 @@ function Game() {
       </div>
       <div className="game-info">
         <div>{status}</div>
-        {renderMoves()}
+        <ol>{moves}</ol>
       </div>
     </div>
   )
