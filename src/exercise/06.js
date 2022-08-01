@@ -17,21 +17,23 @@ function PokemonInfo({pokemonName}) {
 
   useEffect(() => {
     if (!pokemonName?.trim()?.length) {
-        return;
+      return;
     }
     setPokemon(null);
     setStatus('pending');
     setError(null);
     fetchPokemon(pokemonName.trim())
-      .then(pokemonData => setPokemon(pokemonData))
-      .then(() => setStatus('resolved'))
-      .catch(e => {
-        setStatus('rejected');
-        setError(e);
-      });
+      .then(pokemonData => {
+          setPokemon(pokemonData);
+          setStatus('resolved');
+        },
+        error => {
+          setError(error);
+          setStatus('rejected');
+        });
   }, [pokemonName]);
 
-  if (!pokemonName?.trim()?.length) {
+  if (status === 'idle') {
     return <p>Submit a pokemon</p>;
   }
   if (status === 'rejected') {
@@ -39,10 +41,10 @@ function PokemonInfo({pokemonName}) {
       There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
     </div>;
   }
-  if (status === 'resolved' && pokemon) {
-     return <PokemonDataView pokemon={pokemon} />;
+  if (status === 'resolved') {
+    return <PokemonDataView pokemon={pokemon}/>;
   }
-  return <PokemonInfoFallback name={pokemonName} />;
+  return <PokemonInfoFallback name={pokemonName}/>;
 }
 
 function App() {
@@ -54,10 +56,10 @@ function App() {
 
   return (
     <div className="pokemon-info-app">
-      <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
-      <hr />
+      <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit}/>
+      <hr/>
       <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+        <PokemonInfo pokemonName={pokemonName}/>
       </div>
     </div>
   )
