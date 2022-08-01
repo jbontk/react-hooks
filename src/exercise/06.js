@@ -2,37 +2,23 @@
 // http://localhost:3000/isolated/exercise/06.js
 
 import * as React from 'react'
-// 🐨 you'll want the following additional things from '../pokemon':
-// fetchPokemon: the function we call to get the pokemon info
-// PokemonInfoFallback: the thing we show while we're loading the pokemon info
-// PokemonDataView: the stuff we use to display the pokemon info
 import {fetchPokemon, PokemonDataView, PokemonForm, PokemonInfoFallback} from '../pokemon'
 import {useEffect, useState} from "react";
 
 function PokemonInfo({pokemonName}) {
-
-  const [pokemon, setPokemon] = useState(null);
-  const [status, setStatus] = useState('idle');
-  const [error, setError] = useState(null);
+  const [pokemonState, setPokemonState] = useState({pokemon: null, status: 'idle', error: null});
 
   useEffect(() => {
     if (!pokemonName?.trim()?.length) {
       return;
     }
-    setPokemon(null);
-    setStatus('pending');
-    setError(null);
+    setPokemonState({ pokemon: null, status: 'pending', error: null});
     fetchPokemon(pokemonName.trim())
-      .then(pokemonData => {
-          setPokemon(pokemonData);
-          setStatus('resolved');
-        },
-        error => {
-          setError(error);
-          setStatus('rejected');
-        });
+      .then(pokemonData => setPokemonState(prev => ({...prev, pokemon: pokemonData, status: 'resolved'})),
+        error => setPokemonState(prev => ({...prev, error, status: 'rejected'})));
   }, [pokemonName]);
 
+  const {status, error, pokemon} = pokemonState;
   if (status === 'idle') {
     return <p>Submit a pokemon</p>;
   }
