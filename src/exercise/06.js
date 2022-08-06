@@ -4,42 +4,15 @@
 import * as React from 'react'
 import {fetchPokemon, PokemonDataView, PokemonForm, PokemonInfoFallback} from '../pokemon'
 import {useEffect, useState} from "react";
+import {ErrorBoundary} from "react-error-boundary";
 
-const ErrorFallback = ({error}) => <div role="alert">
+const ErrorFallback = ({error, resetErrorBoundary}) => <div role="alert">
   There was an error: <pre style={{whiteSpace: 'normal'}}>{error?.message || 'Unknown error'}</pre>
+  <button onClick={resetErrorBoundary}>Try again</button>
 </div>;
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {hasError: false};
-  }
-
-  static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
-    return {error, errorInfo: null};
-  }
-
-  componentDidCatch(error, errorInfo) {
-    this.setState({
-      error: error,
-      errorInfo: errorInfo
-    })
-    // could log to a remote service
-    console.warn('Caught error', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.error) {
-      return <this.props.FallbackComponent error={this.state.error} />;
-    }
-    return this.props.children;
-  }
-}
-
-
 function PokemonInfo({pokemonName}) {
-  const [pokemonState, setPokemonState] = useState({pokemon: null, status: 'idle', error: null});
+  const [pokemonState, setPokemonState] = useState({pokemon: null, status: pokemonName ? 'pending' : 'idle', error: null});
 
   useEffect(() => {
     if (!pokemonName?.trim()?.length) {
@@ -72,14 +45,12 @@ function App() {
     setPokemonName(newPokemonName)
   }
 
-  // Using key prop to reset the state of the component ErrorBoundary
-  // Note: key must be unique
   return (
     <div className="pokemon-info-app">
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit}/>
       <hr/>
       <div className="pokemon-info">
-        <ErrorBoundary key={pokemonName} FallbackComponent={ErrorFallback}>
+        <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setPokemonName('')} resetKeys={[pokemonName]}>
           <PokemonInfo pokemonName={pokemonName}/>
         </ErrorBoundary>
       </div>
