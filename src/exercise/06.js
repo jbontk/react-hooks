@@ -5,6 +5,10 @@ import * as React from 'react'
 import {fetchPokemon, PokemonDataView, PokemonForm, PokemonInfoFallback} from '../pokemon'
 import {useEffect, useState} from "react";
 
+const ErrorFallback = ({error}) => <div role="alert">
+  There was an error: <pre style={{whiteSpace: 'normal'}}>{error?.message || 'Unknown error'}</pre>
+</div>;
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -13,7 +17,7 @@ class ErrorBoundary extends React.Component {
 
   static getDerivedStateFromError(error) {
     // Update state so the next render will show the fallback UI.
-    return {hasError: true, error, errorInfo: null};
+    return {error, errorInfo: null};
   }
 
   componentDidCatch(error, errorInfo) {
@@ -26,14 +30,13 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    if (this.state.hasError) {
-      return <div role="alert">
-        There was an error: <pre style={{whiteSpace: 'normal'}}>{this.state.error?.message || 'Unknown error'}</pre>
-      </div>;
+    if (this.state.error) {
+      return <this.props.FallbackComponent error={this.state.error} />;
     }
     return this.props.children;
   }
 }
+
 
 function PokemonInfo({pokemonName}) {
   const [pokemonState, setPokemonState] = useState({pokemon: null, status: 'idle', error: null});
@@ -69,12 +72,14 @@ function App() {
     setPokemonName(newPokemonName)
   }
 
+  // Using key prop to reset the state of the component ErrorBoundary
+  // Note: key must be unique
   return (
     <div className="pokemon-info-app">
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit}/>
       <hr/>
       <div className="pokemon-info">
-        <ErrorBoundary key={pokemonName}>
+        <ErrorBoundary key={pokemonName} FallbackComponent={ErrorFallback}>
           <PokemonInfo pokemonName={pokemonName}/>
         </ErrorBoundary>
       </div>
